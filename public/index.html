@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura AI — Personal Assistant & Code Intelligence</title>
+  <meta name="description"
+    content="AI Personal Assistant for code analysis, text explanation, task management, token tracking, and multimodal uploads.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Highlight.js for Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Marked.js for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="theme-dark">
+  <div class="app-layout">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="app-header">
+      <div class="header-left">
+        <button id="toggleSidebarBtn" class="icon-btn" title="Toggle Sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          </svg>
+        </button>
+        <div class="brand">
+          <div class="brand-core">
+            <span class="core-pulse"></span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">AURA <span class="gradient-text">AI</span></span>
+            <span class="brand-subtitle">Personal Code & Task Assistant</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE TOKEN & QUOTA HUD -->
+      <div class="header-center">
+        <div class="token-hud" id="tokenHud" title="Click to view detailed Token & Quota Dashboard">
+          <div class="hud-pill" id="hudTokensUsed">
+            <span class="hud-icon">⚡</span>
+            <span class="hud-label">Tokens:</span>
+            <span class="hud-value" id="hudTokenCount">0</span>
+          </div>
+          <div class="hud-pill" id="hudRateLimit">
+            <span class="hud-icon">📊</span>
+            <span class="hud-label">RPM:</span>
+            <span class="hud-value" id="hudRpmCount">0/15</span>
+          </div>
+          <div class="hud-pill hud-pill-highlight" id="hudWindowTimer">
+            <span class="hud-icon">⏱️</span>
+            <span class="hud-label">1-Min Reset:</span>
+            <span class="hud-value timer-glow" id="hudWindowSeconds">60s</span>
+          </div>
+          <div class="hud-pill" id="hudDailyTimer">
+            <span class="hud-icon">🌅</span>
+            <span class="hud-label">Daily Reset:</span>
+            <span class="hud-value" id="hudDailyTime">--h --m</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEADER ACTIONS -->
+      <div class="header-right">
+        <button id="openTokenModalBtn" class="btn btn-secondary btn-sm" title="Token & Quota Dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+          <span>Tokens</span>
+        </button>
+        <button id="toggleTodoBtn" class="btn btn-secondary btn-sm" title="Toggle To-Do Panel">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+          <span>Tasks</span>
+          <span class="badge" id="tasksHeaderBadge">0</span>
+        </button>
+        <button id="openSettingsBtn" class="icon-btn" title="Settings & API Key">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BODY CONTAINER -->
+    <div class="app-body">
+
+      <!-- LEFT SIDEBAR: CONVERSATION HISTORY & QUICK PROMPTS -->
+      <aside class="sidebar-left" id="sidebarLeft">
+        <div class="sidebar-action">
+          <button id="newChatBtn" class="btn btn-primary btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span>New Conversation</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <h4 class="section-title">Quick Actions</h4>
+          <div class="quick-prompts">
+            <button class="prompt-chip"
+              data-prompt="Analyze this code: explain how it works step-by-step, identify potential edge cases, and suggest performance optimizations.">
+              <span class="chip-icon">🔍</span>
+              <span>Explain & Analyze Code</span>
+            </button>
+            <button class="prompt-chip"
+              data-prompt="Review this code for bugs, logic errors, and security vulnerabilities. Provide corrected snippets.">
+              <span class="chip-icon">🐛</span>
+              <span>Find Bugs & Fix</span>
+            </button>
+            <button class="prompt-chip"
+              data-prompt="Based on our discussion, create a structured, prioritized step-by-step To-Do checklist for me.">
+              <span class="chip-icon">📋</span>
+              <span>Generate To-Do List</span>
+            </button>
+            <button class="prompt-chip"
+              data-prompt="Summarize this text into key bullet points, highlighting core takeaways and action items.">
+              <span class="chip-icon">📝</span>
+              <span>Summarize & Extract</span>
+            </button>
+            <button class="prompt-chip"
+              data-prompt="Write comprehensive unit tests for this code with edge cases covered.">
+              <span class="chip-icon">🧪</span>
+              <span>Write Unit Tests</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section token-mini-widget">
+          <h4 class="section-title">Quota Overview</h4>
+          <div class="mini-stats">
+            <div class="stat-row">
+              <span>Daily Requests:</span>
+              <span id="miniDailyReq">0 / 1500</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="miniDailyReqProgress" style="width: 0%"></div>
+            </div>
+
+            <div class="stat-row" style="margin-top: 8px;">
+              <span>Minute Rate (RPM):</span>
+              <span id="miniRpm">0 / 15</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="miniRpmProgress" style="width: 0%"></div>
+            </div>
+          </div>
+          <button id="viewTokenDetailsBtn" class="text-link-btn">View Token Details →</button>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="model-badge">
+            <span class="indicator-dot"></span>
+            <span id="currentModelLabel">Gemini 2.0 Flash</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER CHAT & MULTIMODAL WORKBENCH -->
+      <main class="chat-main">
+        <!-- Messages Area -->
+        <div class="messages-container" id="messagesContainer">
+
+          <!-- Empty State / Welcome Hero -->
+          <div class="welcome-hero" id="welcomeHero">
+            <div class="hero-icon-container">
+              <div class="hero-orbit"></div>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+            </div>
+            <h2>Hello! I'm <span class="gradient-text">Aura</span></h2>
+            <p class="hero-desc">
+              Your personal assistant for deep code analysis, text explanations, task planning, and multimodal image
+              inspection.
+            </p>
+
+            <div class="hero-cards">
+              <div class="hero-card" data-action="code">
+                <span class="card-icon">💻</span>
+                <h4>Code Intelligence</h4>
+                <p>Upload scripts or paste code to analyze syntax, catch bugs, and get step-by-step explanations.</p>
+              </div>
+              <div class="hero-card" data-action="todo">
+                <span class="card-icon">✅</span>
+                <h4>Smart To-Do Planner</h4>
+                <p>Auto-generate actionable tasks directly from chat or create and track tasks in your sidebar.</p>
+              </div>
+              <div class="hero-card" data-action="token">
+                <span class="card-icon">⚡</span>
+                <h4>Live Token Tracker</h4>
+                <p>Track token usage per message, monitor RPM/TPM limits, and see live countdowns to quota resets.</p>
+              </div>
+              <div class="hero-card" data-action="upload">
+                <span class="card-icon">🖼️</span>
+                <h4>Multimodal Vision</h4>
+                <p>Drop images, diagrams, error screenshots, or source files for instant visual analysis.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- File Attachment Dock (Preview uploaded files before sending) -->
+        <div class="attached-dock" id="attachedDock" style="display: none;">
+          <div class="dock-header">
+            <span class="dock-title">Attached Files (<span id="dockCount">0</span>)</span>
+            <button id="clearAllFilesBtn" class="dock-clear-btn">Remove all</button>
+          </div>
+          <div class="dock-items" id="dockItems"></div>
+        </div>
+
+        <!-- Chat Input Console -->
+        <div class="input-area">
+          <!-- Dropzone overlay when dragging files over -->
+          <div class="drag-dropzone" id="dragDropzone">
+            <div class="dropzone-box">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <span>Drop images or code files here to analyze</span>
+            </div>
+          </div>
+
+          <form id="chatForm" class="chat-form">
+            <div class="input-container">
+              <!-- Upload Button -->
+              <label for="fileInput" class="upload-btn" title="Upload Images or Code/Text Files">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+                <input type="file" id="fileInput" multiple
+                  accept="image/*,.js,.jsx,.ts,.tsx,.py,.html,.css,.json,.txt,.md,.cpp,.c,.h,.java,.go,.rs,.sql,.sh,.yaml,.yml,.xml,.csv">
+              </label>
+
+              <!-- Textarea -->
+              <textarea id="messageInput"
+                placeholder="Ask Aura to analyze code, explain text, extract to-dos... (Shift+Enter for newline)"
+                rows="1"></textarea>
+
+              <!-- Send Button -->
+              <button type="submit" id="sendBtn" class="send-btn" title="Send message (Enter)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
+            </div>
+          </form>
+
+          <div class="input-footer">
+            <span class="tip-text">Supported: Code (JS/PY/TS/HTML/etc), Text/MD, Images (PNG/JPG/WEBP)</span>
+            <span class="token-estimate" id="tokenEstimate">0 chars</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- RIGHT SIDEBAR: TO-DO & TASK MANAGER -->
+      <aside class="sidebar-right" id="sidebarRight">
+        <div class="todo-header">
+          <div class="todo-title-row">
+            <div class="title-with-badge">
+              <h3>To-Do List</h3>
+              <span class="counter-badge" id="todoPendingCount">0</span>
+            </div>
+            <button id="extractTasksFromChatBtn" class="btn btn-xs btn-highlight"
+              title="AI will scan the current conversation and extract tasks">
+              <span>⚡ Auto-Extract</span>
+            </button>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="todo-progress-container">
+            <div class="progress-labels">
+              <span>Progress</span>
+              <span id="todoProgressPercent">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="todoProgressBar" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="pending">Pending</button>
+            <button class="filter-tab" data-filter="completed">Done</button>
+            <button class="filter-tab" data-filter="high">🔥 High</button>
+          </div>
+        </div>
+
+        <!-- Add Task Form -->
+        <div class="add-task-box">
+          <input type="text" id="newTaskInput" placeholder="Add a new task..." autocomplete="off">
+          <div class="task-form-controls">
+            <select id="newTaskPriority" title="Priority">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+            <select id="newTaskTag" title="Category Tag">
+              <option value="Code">Code</option>
+              <option value="Review">Review</option>
+              <option value="Bug">Bug</option>
+              <option value="Personal">Personal</option>
+              <option value="Docs">Docs</option>
+            </select>
+            <button id="addTaskBtn" class="btn btn-sm btn-primary">Add</button>
+          </div>
+        </div>
+
+        <!-- Tasks List -->
+        <div class="tasks-list" id="tasksList">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- To-Do Footer -->
+        <div class="todo-footer">
+          <button id="clearCompletedTasksBtn" class="text-btn">Clear Completed</button>
+          <span class="task-stats-text" id="taskTotalText">0 tasks</span>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- TOKEN USAGE & QUOTA DASHBOARD MODAL -->
+    <div class="modal-overlay" id="tokenModal" style="display: none;">
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">⚡</span>
+            <div>
+              <h3>Gemini Token & Quota Dashboard</h3>
+              <p class="modal-subtitle">Real-time token consumption, rate limit tracking, and quota renewal countdowns
+              </p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="closeTokenModalBtn">×</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Quota Metric Grid -->
+          <div class="quota-grid">
+
+            <!-- Card 1: 1-Minute Reset -->
+            <div class="quota-card highlight-card">
+              <div class="card-head">
+                <span class="card-badge">Rolling 60s Window</span>
+                <span class="card-clock" id="modalWindowSecondsBadge">60s</span>
+              </div>
+              <div class="card-main-val" id="modalWindowSeconds">60<span class="val-unit">s</span></div>
+              <p class="card-desc">Time until your 1-minute RPM/TPM rate window refreshes</p>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill animated-glow" id="modalWindowBar" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <!-- Card 2: Daily Quota Reset -->
+            <div class="quota-card">
+              <div class="card-head">
+                <span class="card-badge">Daily Midnight Reset</span>
+                <span class="card-clock">00:00 UTC</span>
+              </div>
+              <div class="card-main-val" id="modalDailyResetTime">--:--:--</div>
+              <p class="card-desc">Time remaining until the daily 1,500 requests quota resets</p>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="modalDailyResetBar" style="width: 50%"></div>
+              </div>
+            </div>
+
+            <!-- Card 3: Today's Tokens -->
+            <div class="quota-card">
+              <div class="card-head">
+                <span class="card-badge">Today's Consumption</span>
+              </div>
+              <div class="card-main-val" id="modalDailyTokens">0</div>
+              <p class="card-desc">
+                Prompt: <b id="modalPromptTokens">0</b> | Candidates: <b id="modalCandidatesTokens">0</b>
+              </p>
+              <div class="stat-meta" id="modalDailyRequestsMeta">0 / 1500 daily requests used</div>
+            </div>
+
+            <!-- Card 4: Session Tokens -->
+            <div class="quota-card">
+              <div class="card-head">
+                <span class="card-badge">Current Session</span>
+                <button id="resetSessionTokensBtn" class="card-mini-btn" title="Reset session stats">Reset</button>
+              </div>
+              <div class="card-main-val" id="modalSessionTokens">0</div>
+              <p class="card-desc">Total tokens consumed since page opened</p>
+              <div class="stat-meta" id="modalSessionRequestsMeta">0 requests this session</div>
+            </div>
+
+          </div>
+
+          <!-- Limits Explanation Box -->
+          <div class="quota-info-box">
+            <h4>💡 How Gemini Free Tier Quotas Work</h4>
+            <div class="info-columns">
+              <div class="info-col">
+                <strong>15 RPM (Requests Per Minute)</strong>
+                <p>You can send up to 15 requests every 60 seconds. Our timer tracks your recent requests and shows when
+                  the oldest expires.</p>
+              </div>
+              <div class="info-col">
+                <strong>1,000,000 TPM (Tokens Per Minute)</strong>
+                <p>Gemini offers a massive 1M tokens/min limit on the flash models, ideal for analyzing entire codebases
+                  and images.</p>
+              </div>
+              <div class="info-col">
+                <strong>1,500 RPD (Requests Per Day)</strong>
+                <p>Daily limit resets every day at 00:00 UTC (13:30 IST / 16:00 PST). The countdown above updates live
+                  every second.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Requests Table -->
+          <div class="token-history-section">
+            <h4>Recent Request History</h4>
+            <div class="table-wrapper">
+              <table class="token-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Model</th>
+                    <th>Prompt Tokens</th>
+                    <th>Completion Tokens</th>
+                    <th>Total Tokens</th>
+                    <th>Latency</th>
+                  </tr>
+                </thead>
+                <tbody id="tokenHistoryTableBody">
+                  <tr>
+                    <td colspan="6" class="text-muted text-center">No requests recorded yet</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="modalCloseFooterBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS & API KEY MODAL -->
+    <div class="modal-overlay" id="settingsModal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">⚙️</span>
+            <div>
+              <h3>Settings</h3>
+              <p class="modal-subtitle">Configure Gemini API key, model selection, and bot persona</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="closeSettingsModalBtn">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="apiKeyInput">Gemini API Key</label>
+            <div class="input-with-button">
+              <input type="password" id="apiKeyInput" placeholder="AIzaSy..." autocomplete="off">
+              <button type="button" id="toggleApiKeyVisibility" class="btn btn-secondary btn-icon-only"
+                title="Show/Hide">
+                👁️
+              </button>
+            </div>
+            <span class="form-help">
+              Don't have a key? Get a free key at
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+              Your key is saved locally.
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="modelSelect">AI Model</label>
+            <select id="modelSelect">
+              <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended — Super Fast & Multimodal)</option>
+              <option value="gemini-1.5-flash">Gemini 1.5 Flash (Efficient & High Quotas)</option>
+              <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoning & Long Context)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="systemInstructionInput">Assistant Persona & Instructions</label>
+            <textarea id="systemInstructionInput" rows="4"
+              placeholder="Customize how Aura behaves (e.g. Always provide runnable code, be concise, etc.)..."></textarea>
+          </div>
+
+          <div class="status-alert" id="apiKeyStatusAlert" style="display: none;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+          <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="/js/token-tracker.js"></script>
+  <script src="/js/todo-manager.js"></script>
+  <script src="/js/chat-manager.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+
+</html>
